@@ -1,0 +1,33 @@
+head, body{
+    margin: 0;
+    padding: 1vw;
+    background-color: #f9d3d3;
+}
+
+.header{
+    width: 98vw;
+    height: 10vh;
+    text-align: center;
+    line-height: 10vh;
+    font-size: 5vh;
+    background-color: #f99f9f;
+}
+
+.rule{
+    font-size: 1.25vw;
+    width: 50vw;
+}
+
+img{
+    position: absolute;
+    left: 60vw;
+    top: 20vh;
+}
+
+.pic{
+    width: 5vw;
+    position: absolute;
+    left: 60vw;
+    top: 84vh;
+    text-align: center;
+}
