@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 Game</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  .container {
+    display: inline-block;
+    border: 2px solid #ccc;
+    padding: 10px;
+  }
+  .tile {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    background-color: #ccc;
+    color:#ccc;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .tile-2 { background-color: #eee4da; color: #776e65; }
+  .tile-4 { background-color: #ede0c8; color: #776e65; }
+  .tile-8 { background-color: #f2b179; color: #ffffff; }
+  .tile-16 { background-color: #f59563; color: #ffffff; }
+  .tile-32 { background-color: #f67c5f; color: #ffffff; }
+  .tile-64 { background-color: #f65e3b; color: #ffffff; }
+  .tile-128 { background-color: #edcf72; color: #ffffff; }
+  .tile-256 { background-color: #edcc61; color: #ffffff; }
+  .tile-512 { background-color: #edc850; color: #ffffff; }
+  .tile-1024 { background-color: #edc53f; color: #ffffff; }
+  .tile-2048 { background-color: #edc22e; color: #ffffff; }
+</style>
+</head>
+<body>
+<div class="div-right">
+  <h3>highest</h3>
+  <h3 id="highest"></h3>
+</div>
+<style type="text/css">
+.div-right{
+  text-align: right;
+}
+</style>
+<h1>2048 Game</h1>
+
+<div class="container">
+  <div id="grid"></div>
+  <button onclick="resetGame()">New Game</button>
+</div>
+
+<script>
+  let high;
+  let grid = [];
+  const GRID_SIZE = 4;
+
+  function initializeGrid() {
+    high = 0;
+    const score = document.getElementById("highest");
+    score.textContent = high;
+    grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+    addRandomTile();
+    addRandomTile();
+    updateGrid();
+  }
+
+  function addRandomTile() {
+    const emptyCells = [];
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        if (grid[i][j] === 0) {
+          emptyCells.push({ row: i, col: j });
+        }
+      }
+    }
+    if (emptyCells.length > 0) {
+      const { row, col } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      grid[row][col] = Math.random() < 0.9 ? 2 : 4;
+    }
+  }
+
+  function updateGrid() {
+    const gridContainer = document.getElementById('grid');
+    gridContainer.innerHTML = '';
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        const tile = document.createElement('div');
+        tile.className = `tile tile-${grid[i][j]}`;
+        tile.textContent = grid[i][j] === 0 ? 'x' : grid[i][j];
+        gridContainer.appendChild(tile);
+      }
+      const breakLine = document.createElement('br');
+      gridContainer.appendChild(breakLine);
+    }
+  }
+
+  function resetGame() {
+    initializeGrid();
+  }
+
+  function move(direction) {
+    let moved = false;
+
+    const shift = (arr) => {
+      let shifted = false;
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i] === 0) {
+          arr.splice(i, 1);
+          arr.push(0);
+          shifted = true;
+        }
+      }
+      return shifted;
+    };
+
+    const merge = (arr) => {
+      let merged = false;
+      for (let i = arr.length - 1; i > 0; i--) {
+        if (arr[i] !== 0 && arr[i] === arr[i - 1]) {
+          arr[i] *= 2;
+          if(arr[i] > high){
+            high = arr[i];
+            const score = document.getElementById("highest");
+            score.textContent = high;
+          }
+          arr[i - 1] = 0;
+          merged = true;
+        }
+      }
+      return merged;
+    };
+
+    const shiftAndMerge = (arr) => {
+      return shift(arr) | merge(arr) | shift(arr);
+    };
+
+    const moveLeft = () => {
+      let changed = false;
+      for (let i = 0; i < GRID_SIZE; i++) {
+        if (shiftAndMerge(grid[i])) {
+          changed = true;
+        }
+      }
+      return changed;
+    };
+
+    const moveRight = () => {
+      let changed = false;
+      for (let i = 0; i < GRID_SIZE; i++) {
+        const row = grid[i].reverse();
+        if (shiftAndMerge(row)) {
+          changed = true;
+        }
+        grid[i] = row.reverse();
+      }
+      return changed;
+    };
+
+    const moveUp = () => {
+      let changed = false;
+      for (let j = 0; j < GRID_SIZE; j++) {
+        const col = [];
+        for (let i = 0; i < GRID_SIZE; i++) {
+          col.push(grid[i][j]);
+        }
+        if (shiftAndMerge(col)) {
+          changed = true;
+        }
+        for (let i = 0; i < GRID_SIZE; i++) {
+          grid[i][j] = col[i];
+        }
+      }
+      return changed;
+    };
+
+    const moveDown = () => {
+      let changed = false;
+      for (let j = 0; j < GRID_SIZE; j++) {
+        const col = [];
+        for (let i = GRID_SIZE - 1; i >= 0; i--) {
+          col.push(grid[i][j]);
+        }
+        if (shiftAndMerge(col)) {
+          changed = true;
+        }
+        for (let i = GRID_SIZE - 1; i >= 0; i--) {
+          grid[i][j] = col[GRID_SIZE - 1 - i];
+        }
+      }
+      return changed;
+    };
+
+    if (direction === 'left') {
+      moved = moveLeft();
+    } else if (direction === 'right') {
+      moved = moveRight();
+    } else if (direction === 'up') {
+      moved = moveUp();
+    } else if (direction === 'down') {
+      moved = moveDown();
+    }
+
+    if (moved) {
+      addRandomTile();
+      updateGrid();
+      if (checkGameOver()) {
+        alert('Game Over!');
+      }
+    }
+  }
+
+  function checkGameOver() {
+    for (let i = 0; i < GRID_SIZE; i++) {
+      for (let j = 0; j < GRID_SIZE; j++) {
+        if (grid[i][j] === 0) {
+          return false;
+        }
+        if (i !== GRID_SIZE - 1 && grid[i][j] === grid[i + 1][j]) {
+          return false;
+        }
+        if (j !== GRID_SIZE - 1 && grid[i][j] === grid[i][j + 1]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'ArrowUp') {
+      move('up');
+    } else if (event.key === 'ArrowDown') {
+      move('down');
+    } else if (event.key === 'ArrowLeft') {
+      move('left');
+    } else if (event.key === 'ArrowRight') {
+      move('right');
+    }
+  });
+
+  initializeGrid();
+</script>
+
+</body>
+</html>
